@@ -48,11 +48,11 @@ export const reportsApi = {
   },
 
   getCategories: async (): Promise<Category[]> => {
-    const res = await fetch(`${BASE_URL}/categories`)
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.message)
-    return data.data
-  },
+  const res = await fetch(`${BASE_URL}/report-categories`)
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.message)
+  return data.data ?? []
+},
 
   getMyReports: async (token: string): Promise<Report[]> => {
     const res = await fetch(`${BASE_URL}/reports/my`, {

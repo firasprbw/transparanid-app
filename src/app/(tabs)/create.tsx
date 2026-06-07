@@ -27,7 +27,7 @@ export default function CreateReportScreen() {
     title: "",
     description: "",
     entityName: "",
-    entityType: "GOVERNMENT",
+    entityType: "LAINNYA",
     categoryId: "",
     location: "",
     incidentDate: "",
@@ -49,16 +49,21 @@ export default function CreateReportScreen() {
     setForm((prev) => ({ ...prev, [key]: val }))
 
   const pickEvidences = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true,
-      quality: 0.8,
-      selectionLimit: 5
-    })
-    if (!result.canceled) {
-      setEvidences(result.assets.slice(0, 5))
-    }
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ["images"],
+    allowsMultipleSelection: true,
+    quality: 0.8,
+    selectionLimit: 5
+  })
+  
+  console.log("canceled:", result.canceled)
+  console.log("assets:", result.assets)
+  
+  if (!result.canceled) {
+    setEvidences(result.assets.slice(0, 5))
+    console.log("evidences set:", result.assets.length)
   }
+}
 
   const handleSubmit = async () => {
     const { title, description, entityName, entityType, categoryId, location, incidentDate, estimatedAmount } = form
@@ -71,6 +76,11 @@ export default function CreateReportScreen() {
       setError("Minimal 1 bukti wajib diupload")
       return
     }
+
+    if (evidences.length === 0 && Platform.OS !== "web") {
+    setError("Minimal 1 bukti wajib diupload")
+    return
+  }
 
     setLoading(true)
     setError("")
@@ -87,12 +97,15 @@ export default function CreateReportScreen() {
       formData.append("estimatedAmount", estimatedAmount)
 
       evidences.forEach((asset, i) => {
-        formData.append("evidences", {
-          uri: asset.uri,
-          name: asset.fileName ?? `evidence_${i}.jpg`,
-          type: asset.mimeType ?? "image/jpeg"
-        } as any)
-      })
+  const ext = asset.uri.split(".").pop()?.toLowerCase() ?? "jpg"
+  const mimeType = asset.mimeType ?? `image/${ext === "jpg" ? "jpeg" : ext}`
+
+  formData.append("evidences", {
+    uri: asset.uri,
+    name: asset.fileName ?? `evidence_${i}.${ext}`,
+    type: mimeType
+  } as any)
+})
 
       await reportsApi.create(token!, formData)
       Alert.alert("Berhasil", "Laporan berhasil dikirim dan menunggu review.", [
@@ -105,7 +118,7 @@ export default function CreateReportScreen() {
     }
   }
 
-  const ENTITY_TYPES = ["GOVERNMENT", "PRIVATE", "NGO", "OTHER"]
+  const ENTITY_TYPES = ["PEMERINTAH", "PERUSAHAAN", "INDIVIDU", "ORGANISASI", "PENDIDIKAN", "LAINNYA"]
 
   return (
     <ScrollView className="flex-1 bg-gray-50" keyboardShouldPersistTaps="handled">
@@ -176,7 +189,7 @@ export default function CreateReportScreen() {
                   className={`px-4 py-2 rounded-xl border ${
                     form.categoryId === cat.id
                       ? "bg-blue-600 border-blue-600"
-                      : "bg-white border-gray-200"
+                    : "bg-white border-gray-200"
                   }`}
                   onPress={() => update("categoryId")(cat.id)}
                 >
@@ -247,7 +260,7 @@ export default function CreateReportScreen() {
         {/* EVIDENCES */}
         <View>
           <Text className="text-sm font-medium text-gray-700 mb-2">
-            Bukti (maks. 5 foto) *
+            Bukti
           </Text>
           <TouchableOpacity
             className="bg-white border-2 border-dashed border-gray-200 rounded-xl py-4 items-center mb-3"

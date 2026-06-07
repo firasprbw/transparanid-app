@@ -120,14 +120,14 @@ export default function ReportDetailScreen() {
           {/* META */}
           <View className="gap-1">
             <Text className="text-sm text-gray-500">
-              🏛 {report.entities?.display_name ?? report.entity?.display_name}
+              Terlapor: {report.entities?.display_name ?? report.entity?.display_name}
             </Text>
-            <Text className="text-sm text-gray-500">📍 {report.location}</Text>
+            <Text className="text-sm text-gray-500">Lokasi: {report.location}</Text>
             <Text className="text-sm text-gray-500">
-              📅 {format(new Date(report.incident_date), "d MMMM yyyy", { locale: id })}
+              Tanggal Kejadian: {format(new Date(report.incident_date), "d MMMM yyyy", { locale: id })}
             </Text>
             <Text className="text-base font-semibold text-gray-800 mt-1">
-              Rp {report.estimated_amount?.toLocaleString("id-ID")}
+              Total Kerugian: Rp {report.estimated_amount?.toLocaleString("id-ID")}
             </Text>
           </View>
         </View>
@@ -137,7 +137,7 @@ export default function ReportDetailScreen() {
           <Text className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
             Deskripsi
           </Text>
-          <Text className="text-sm text-gray-700 leading-relaxed">{report.description}</Text>
+          <Text className="text-md text-gray-700 leading-relaxed">{report.description}</Text>
         </View>
 
         {/* EVIDENCES */}

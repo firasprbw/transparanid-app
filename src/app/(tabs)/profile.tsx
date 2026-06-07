@@ -70,11 +70,18 @@ export default function ProfileScreen() {
   useEffect(() => { fetchMyReports() }, [fetchMyReports])
 
   const handleLogout = () => {
-    Alert.alert("Keluar", "Yakin ingin keluar?", [
-      { text: "Batal", style: "cancel" },
-      { text: "Keluar", style: "destructive", onPress: logout }
-    ])
-  }
+  Alert.alert("Keluar", "Yakin ingin keluar?", [
+    { text: "Batal", style: "cancel" },
+    {
+      text: "Keluar",
+      style: "destructive",
+      onPress: async () => {
+        router.replace("/(auth)/login")
+        await logout()
+      }
+    }
+  ])
+}
 
   const stats = {
     total:   reports.length,
