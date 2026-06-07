@@ -1,15 +1,47 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useColorScheme } from 'react-native';
+import "../global.css"
+import { useEffect } from "react"
+import { Stack, useRouter, useSegments } from "expo-router"
+import { Provider as PaperProvider } from "react-native-paper"
+import { AuthProvider, useAuth } from "@/contexts/auth-context"
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+function AuthGate() {
+  const { user, loading } = useAuth()
+  const segments           = useSegments()
+  const router             = useRouter()
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    if (loading) return
+
+    const inAuth = segments[0] === "(auth)"
+
+    if (!user && !inAuth) {
+      router.replace("/(auth)/login")
+    } else if (user && inAuth) {
+      router.replace("/(tabs)")
+    }
+  }, [user, loading, segments])
+
+  return null
+}
+
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
-  );
+    <AuthProvider>
+      <PaperProvider>
+        <AuthGate />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)"  options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)"  options={{ headerShown: false }} />
+          <Stack.Screen
+            name="report/[slug]"
+            options={{
+              headerShown: true,
+              title: "Detail Laporan",
+              headerBackTitle: "Kembali"
+            }}
+          />
+        </Stack>
+      </PaperProvider>
+    </AuthProvider>
+  )
 }
