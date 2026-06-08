@@ -17,7 +17,7 @@ import { reportsApi, Report } from "@/lib/api/reports"
 import { formatDistanceToNow } from "date-fns"
 import { id } from "date-fns/locale"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { Search, X } from "lucide-react-native"
+import { CommandIcon, Search, X } from "lucide-react-native"
 
 function ReportCard({ report, onPress }: { report: Report; onPress: () => void }) {
   const evidences = report.evidences ?? []
@@ -142,7 +142,7 @@ export default function FeedScreen() {
   }
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white" style={{ paddingBottom: 100 }}>
   <StatusBar barStyle="dark-content" />
 
   {/* HEADER */}
@@ -150,9 +150,13 @@ export default function FeedScreen() {
     className="bg-white px-4 pb-3"
     style={{ borderBottomWidth: 0.5, borderBottomColor: "rgba(0,0,0,0.1)" }}
   >
-    <Text className="text-2xl font-black text-black tracking-tight mb-3">
-      Laporan
+    <View className="flex-row gap-2 mt-2">
+      <CommandIcon className="mt-1"></CommandIcon>
+      <Text className="text-2xl font-bold text-black tracking-tight mb-3">
+      TransparanID
     </Text>
+    </View>
+    
 
     {/* SEARCH BAR */}
     <View

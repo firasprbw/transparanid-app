@@ -15,26 +15,35 @@ import { useRouter } from "expo-router"
 import { reportsApi, Category } from "@/lib/api/reports"
 import { useAuth } from "@/contexts/auth-context"
 
+const ENTITY_TYPES = [
+  "PERSON",
+  "BUSINESS",
+  "GOVERNMENT",
+  "ORGANIZATION",
+  "SCHOOL",
+  "FOUNDATION",
+  "OTHER"
+]
+
 export default function CreateReportScreen() {
-  const router      = useRouter()
-  const { token }   = useAuth()
+  const router    = useRouter()
+  const { token } = useAuth()
 
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading]       = useState(false)
   const [error, setError]           = useState("")
+  const [evidences, setEvidences]   = useState<ImagePicker.ImagePickerAsset[]>([])
 
   const [form, setForm] = useState({
-    title: "",
-    description: "",
-    entityName: "",
-    entityType: "LAINNYA",
-    categoryId: "",
-    location: "",
-    incidentDate: "",
+    title:           "",
+    description:     "",
+    entityName:      "",
+    entityType:      "GOVERNMENT",
+    categoryId:      "",
+    location:        "",
+    incidentDate:    "",
     estimatedAmount: ""
   })
-
-  const [evidences, setEvidences] = useState<ImagePicker.ImagePickerAsset[]>([])
 
   useEffect(() => {
     reportsApi.getCategories()
@@ -49,38 +58,32 @@ export default function CreateReportScreen() {
     setForm((prev) => ({ ...prev, [key]: val }))
 
   const pickEvidences = async () => {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ["images"],
-    allowsMultipleSelection: true,
-    quality: 0.8,
-    selectionLimit: 5
-  })
-  
-  console.log("canceled:", result.canceled)
-  console.log("assets:", result.assets)
-  
-  if (!result.canceled) {
-    setEvidences(result.assets.slice(0, 5))
-    console.log("evidences set:", result.assets.length)
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"] as any,
+      allowsMultipleSelection: true,
+      quality: 0.8,
+      selectionLimit: 5
+    })
+    if (!result.canceled) {
+      setEvidences(result.assets.slice(0, 5))
+    }
   }
-}
 
   const handleSubmit = async () => {
-    const { title, description, entityName, entityType, categoryId, location, incidentDate, estimatedAmount } = form
+    const {
+      title, description, entityName, entityType,
+      categoryId, location, incidentDate, estimatedAmount
+    } = form
 
     if (!title || !description || !entityName || !categoryId || !location || !incidentDate || !estimatedAmount) {
       setError("Semua field wajib diisi")
       return
     }
-    if (evidences.length === 0) {
+
+    if (evidences.length === 0 && Platform.OS !== "web") {
       setError("Minimal 1 bukti wajib diupload")
       return
     }
-
-    if (evidences.length === 0 && Platform.OS !== "web") {
-    setError("Minimal 1 bukti wajib diupload")
-    return
-  }
 
     setLoading(true)
     setError("")
@@ -96,18 +99,32 @@ export default function CreateReportScreen() {
       formData.append("incidentDate", incidentDate)
       formData.append("estimatedAmount", estimatedAmount)
 
-      evidences.forEach((asset, i) => {
-  const ext = asset.uri.split(".").pop()?.toLowerCase() ?? "jpg"
-  const mimeType = asset.mimeType ?? `image/${ext === "jpg" ? "jpeg" : ext}`
-
-  formData.append("evidences", {
-    uri: asset.uri,
-    name: asset.fileName ?? `evidence_${i}.${ext}`,
-    type: mimeType
-  } as any)
-})
+      if (Platform.OS === "web") {
+        for (let i = 0; i < evidences.length; i++) {
+          const asset    = evidences[i]
+          const response = await fetch(asset.uri)
+          const blob     = await response.blob()
+          const file     = new File(
+            [blob],
+            asset.fileName ?? `evidence_${i}.jpg`,
+            { type: asset.mimeType ?? "image/jpeg" }
+          )
+          formData.append("evidences", file)
+        }
+      } else {
+        evidences.forEach((asset, i) => {
+          const ext      = asset.uri.split(".").pop()?.toLowerCase() ?? "jpg"
+          const mimeType = asset.mimeType ?? `image/${ext === "jpg" ? "jpeg" : ext}`
+          formData.append("evidences", {
+            uri:  asset.uri,
+            name: asset.fileName ?? `evidence_${i}.${ext}`,
+            type: mimeType
+          } as any)
+        })
+      }
 
       await reportsApi.create(token!, formData)
+
       Alert.alert("Berhasil", "Laporan berhasil dikirim dan menunggu review.", [
         { text: "OK", onPress: () => router.replace("/(tabs)") }
       ])
@@ -118,10 +135,10 @@ export default function CreateReportScreen() {
     }
   }
 
-  const ENTITY_TYPES = ["PEMERINTAH", "PERUSAHAAN", "INDIVIDU", "ORGANISASI", "PENDIDIKAN", "LAINNYA"]
-
   return (
-    <ScrollView className="flex-1 bg-gray-50" keyboardShouldPersistTaps="handled">
+    <ScrollView className="flex-1 bg-gray-50" keyboardShouldPersistTaps="handled" 
+    contentContainerStyle={{ paddingBottom: 100 }}>
+
       {/* HEADER */}
       <View className="bg-white px-4 pt-14 pb-4 border-b border-gray-100">
         <Text className="text-2xl font-bold text-gray-900">Buat Laporan</Text>
@@ -163,7 +180,7 @@ export default function CreateReportScreen() {
                 key={type}
                 className={`px-4 py-2 rounded-xl border ${
                   form.entityType === type
-                    ? "bg-blue-600 border-blue-600"
+                    ? "bg-gray-900 border-gray-900"
                     : "bg-white border-gray-200"
                 }`}
                 onPress={() => update("entityType")(type)}
@@ -188,8 +205,8 @@ export default function CreateReportScreen() {
                   key={cat.id}
                   className={`px-4 py-2 rounded-xl border ${
                     form.categoryId === cat.id
-                      ? "bg-blue-600 border-blue-600"
-                    : "bg-white border-gray-200"
+                      ? "bg-gray-900 border-gray-900"
+                      : "bg-white border-gray-200"
                   }`}
                   onPress={() => update("categoryId")(cat.id)}
                 >
@@ -259,14 +276,12 @@ export default function CreateReportScreen() {
 
         {/* EVIDENCES */}
         <View>
-          <Text className="text-sm font-medium text-gray-700 mb-2">
-            Bukti
-          </Text>
+          <Text className="text-sm font-medium text-gray-700 mb-2">Bukti</Text>
           <TouchableOpacity
             className="bg-white border-2 border-dashed border-gray-200 rounded-xl py-4 items-center mb-3"
             onPress={pickEvidences}
           >
-            <Text className="text-blue-600 font-medium text-sm">
+            <Text className="text-gray-900 font-medium text-sm">
               {evidences.length > 0 ? `${evidences.length} foto dipilih` : "+ Pilih Foto"}
             </Text>
           </TouchableOpacity>
@@ -293,7 +308,7 @@ export default function CreateReportScreen() {
 
         {/* SUBMIT */}
         <TouchableOpacity
-          className="bg-blue-600 rounded-xl py-4 items-center mt-2 mb-8"
+          className="bg-gray-900 rounded-xl py-4 items-center mt-2 mb-8"
           onPress={handleSubmit}
           disabled={loading}
         >

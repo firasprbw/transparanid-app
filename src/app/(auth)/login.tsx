@@ -11,6 +11,8 @@ import {
 } from "react-native"
 import { authApi } from "@/lib/api/auth"
 import { useAuth } from "@/contexts/auth-context"
+import { CommandIcon } from "lucide-react-native"
+import { useRouter } from "expo-router"
 
 export default function LoginScreen() {
   const { login } = useAuth()
@@ -19,6 +21,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("")
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState("")
+  const router = useRouter()
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -48,6 +51,7 @@ export default function LoginScreen() {
       >
         {/* HEADER */}
         <View className="mb-10 items-center">
+          <CommandIcon></CommandIcon>
           <Text className="text-3xl font-bold text-gray-900">TransparanID</Text>
           <Text className="text-sm text-gray-500 mt-1">Platform pelaporan korupsi</Text>
         </View>
@@ -84,7 +88,7 @@ export default function LoginScreen() {
           ) : null}
 
           <TouchableOpacity
-            className="bg-blue-600 rounded-xl py-4 items-center mt-2"
+            className="bg-black rounded-xl py-4 items-center mt-2"
             onPress={handleLogin}
             disabled={loading}
           >
@@ -96,8 +100,8 @@ export default function LoginScreen() {
 
           <View className="flex-row justify-center mt-4">
             <Text className="text-gray-500 text-sm">Belum punya akun? </Text>
-            <TouchableOpacity onPress={() => {}}>
-              <Text className="text-blue-600 text-sm font-medium">Daftar</Text>
+            <TouchableOpacity onPress={() => router.push("/(auth)/register")}>
+              <Text className="text-black text-sm font-medium">Daftar</Text>
             </TouchableOpacity>
           </View>
         </View>

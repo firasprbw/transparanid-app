@@ -11,6 +11,7 @@ import {
 } from "react-native"
 import { useRouter } from "expo-router"
 import { authApi } from "@/lib/api/auth"
+import { CommandIcon } from "lucide-react-native"
 
 export default function RegisterScreen() {
   const router = useRouter()
@@ -56,6 +57,7 @@ export default function RegisterScreen() {
       >
         {/* HEADER */}
         <View className="mb-10 items-center">
+          <CommandIcon></CommandIcon>
           <Text className="text-3xl font-bold text-gray-900">TransparanID</Text>
           <Text className="text-sm text-gray-500 mt-1">Buat akun baru</Text>
         </View>
@@ -88,7 +90,7 @@ export default function RegisterScreen() {
           ) : null}
 
           <TouchableOpacity
-            className="bg-blue-600 rounded-xl py-4 items-center mt-2"
+            className="bg-black rounded-xl py-4 items-center mt-2"
             onPress={handleRegister}
             disabled={loading}
           >
@@ -101,7 +103,7 @@ export default function RegisterScreen() {
           <View className="flex-row justify-center mt-4">
             <Text className="text-gray-500 text-sm">Sudah punya akun? </Text>
             <TouchableOpacity onPress={() => router.replace("/(auth)/login")}>
-              <Text className="text-blue-600 text-sm font-medium">Masuk</Text>
+              <Text className="text-black text-sm font-medium">Masuk</Text>
             </TouchableOpacity>
           </View>
         </View>

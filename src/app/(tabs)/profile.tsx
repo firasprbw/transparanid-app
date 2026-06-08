@@ -6,7 +6,8 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
-  Alert
+  Alert,
+  Platform
 } from "react-native"
 import { useRouter } from "expo-router"
 import { useAuth } from "@/contexts/auth-context"
@@ -25,7 +26,7 @@ function MyReportCard({ report, onPress }: { report: Report; onPress: () => void
 
   return (
     <TouchableOpacity
-      className="bg-white rounded-2xl p-4 mb-3 border border-gray-100"
+      className="bg-white rounded-2xl p-4 mb-3 border"
       onPress={onPress}
       activeOpacity={0.7}
     >
@@ -53,34 +54,44 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false)
 
   const fetchMyReports = useCallback(async (isRefresh = false) => {
-    if (!token) return
-    if (isRefresh) setRefreshing(true)
-    else setLoading(true)
-    try {
-      const data = await reportsApi.getMyReports(token)
-      setReports(data ?? [])
-    } catch {
-      // silent
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }, [token])
+  if (!token) {
+    console.log("no token")
+    setLoading(false)  // ← tambah ini
+    return
+  }
+  if (isRefresh) setRefreshing(true)
+  else setLoading(true)
+  try {
+    const data = await reportsApi.getMyReports(token)
+    console.log("my reports:", data)
+    setReports(data ?? [])
+  } catch (err) {
+    console.log("my reports error:", err)
+  } finally {
+    setLoading(false)
+    setRefreshing(false)
+  }
+}, [token])
 
   useEffect(() => { fetchMyReports() }, [fetchMyReports])
 
-  const handleLogout = () => {
-  Alert.alert("Keluar", "Yakin ingin keluar?", [
-    { text: "Batal", style: "cancel" },
-    {
-      text: "Keluar",
-      style: "destructive",
-      onPress: async () => {
-        router.replace("/(auth)/login")
-        await logout()
+  const handleLogout = async () => {
+  if (Platform.OS === "web") {
+    router.replace("/(auth)/login")
+    await logout()
+  } else {
+    Alert.alert("Keluar", "Yakin ingin keluar?", [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Keluar",
+        style: "destructive",
+        onPress: async () => {
+          router.replace("/(auth)/login")
+          await logout()
+        }
       }
-    }
-  ])
+    ])
+  }
 }
 
   const stats = {
@@ -91,13 +102,15 @@ export default function ProfileScreen() {
   }
 
   return (
+    <View style={{ flex: 1, overflow: 'hidden', paddingBottom: 100 }}>
     <ScrollView
-      className="flex-1 bg-gray-50"
+      style={{ flex: 1 }}
+      contentContainerStyle={{ flexGrow: 1, paddingBottom: 32 }}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
           onRefresh={() => fetchMyReports(true)}
-          tintColor="#2563eb"
+          tintColor="black"
         />
       }
     >
@@ -106,7 +119,7 @@ export default function ProfileScreen() {
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
             {/* AVATAR */}
-            <View className="w-14 h-14 rounded-full bg-blue-600 items-center justify-center">
+            <View className="w-14 h-14 rounded-full bg-black items-center justify-center">
               <Text className="text-white text-xl font-bold">
                 {user?.username?.[0]?.toUpperCase()}
               </Text>
@@ -127,7 +140,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* STATS */}
-      <View className="px-4 py-4">
+      <View className="px-4 py-4 bg-white">
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
           Statistik Laporan
         </Text>
@@ -147,7 +160,7 @@ export default function ProfileScreen() {
       </View>
 
       {/* MY REPORTS */}
-      <View className="px-4 pb-8">
+      <View className="px-4 pb-8 bg-white">
         <Text className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
           Laporan Saya
         </Text>
@@ -155,7 +168,7 @@ export default function ProfileScreen() {
         {loading ? (
           <ActivityIndicator color="#2563eb" />
         ) : reports.length === 0 ? (
-          <View className="bg-white rounded-2xl p-6 items-center border border-gray-100">
+          <View className="bg-white rounded-2xl p-6 items-center border border-black">
             <Text className="text-gray-400 text-sm">Belum ada laporan</Text>
             <TouchableOpacity
               className="mt-3 bg-blue-600 px-6 py-2 rounded-xl"
@@ -176,5 +189,7 @@ export default function ProfileScreen() {
       </View>
 
     </ScrollView>
+    </View>
+    
   )
 }
